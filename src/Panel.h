@@ -30,13 +30,17 @@ class Panel{
     private:
       //params
       neoPixelType _stripParams;
-      unsigned   _pin;
-      unsigned  _width, _height, _numLeds; 
+      unsigned  _pin;
+      unsigned  _width, _height, _numLeds;
+      Style_enum _layoutStyle;
+      IniSide_enum _iniSide;
+      
+      // transformations
+      int _x_ref, _y_ref; 
       unsigned _matrixRotation, _rotation;
-      bool _layoutStyle, _iniSide; 
-
-
-      //util
+      int popX, popY, popRot, popMatrixRot;
+      
+      //containers
       Adafruit_NeoPixel *_strip;
       uint32_t *_cData;
 
@@ -51,15 +55,17 @@ class Panel{
 
       
     public:
-
     
+      Panel(unsigned pin, unsigned width, unsigned height, Style_enum style, IniSide_enum iniSide, unsigned matrixRotation, neoPixelType stripParams);   
+      Panel(unsigned pin, unsigned width, unsigned height, Style_enum style, IniSide_enum iniSide, unsigned matrixRotation); 
       Panel(unsigned width, unsigned height, Style_enum style, IniSide_enum iniSide, unsigned matrixRotation);     
-      Panel(int pin, unsigned width, unsigned height, Style_enum style, IniSide_enum iniSide, unsigned matrixRotation); 
-      Panel(int pin, unsigned width, unsigned height, Style_enum style, IniSide_enum iniSide, unsigned matrixRotation, neoPixelType stripParams);
-
-      void rotateMatrix(int deg);
-
+      
       ~Panel();
+
+      void rebuild(unsigned pin, unsigned width, unsigned height, Style_enum style, IniSide_enum iniSide, int matrixRotation, neoPixelType stripParams);
+      void rebuild(unsigned pin, unsigned width, unsigned height, Style_enum style, IniSide_enum iniSide, int matrixRotation);
+      void rebuild(unsigned width, unsigned height, Style_enum style, IniSide_enum iniSide, int matrixRotation);
+      void rebuild(unsigned width, unsigned height);
 
       bool begin();
       void setBrightness(int lvl);
@@ -74,13 +80,18 @@ class Panel{
       uint32_t getPixel(int x, int y) const;
       void clear();
       
+      void pushMatrix();
+      void popMatrix();
+      void translate(int x, int y);
       void rotate(int deg);
+      void rotateMatrix(int deg);
 
       void testLayout();
       
       void drawImg(Img_t img, int posX, int posY);
       void drawImg(uint32_t *img, unsigned width, unsigned height, int posX, int posY);
-
+      void line(int x0, int y0, int x1, int y1);
+      void line(int x0, int y0, int x1, int y1, uint32_t color);
       void rect(int x0, int y0, int x1, int y1);
       void rect(int x0, int y0, int x1, int y1, uint32_t color);
 
@@ -94,9 +105,12 @@ class Panel{
           return Adafruit_NeoPixel::Color(r, g, b);
       }
 
-      //getters
+      //getters <todo>
 
       
 };   
 
 #endif
+
+
+

@@ -6,20 +6,13 @@
 
 //// public ////
 
-
-Panel::Panel(unsigned width, unsigned height, Style_enum style, IniSide_enum iniSide, unsigned matrixRotation){
-	Panel(MAT_PIN, width, height, style, iniSide, matrixRotation);
-}
-
-Panel::Panel(int pin, unsigned width, unsigned height, Style_enum style, IniSide_enum iniSide, unsigned matrixRotation){
-	Panel(pin, width, height, style, iniSide, matrixRotation, NEO_GRB + NEO_KHZ800);
-}
-
-Panel::Panel(int pin, unsigned width, unsigned height, Style_enum style, IniSide_enum iniSide, unsigned matrixRotation, neoPixelType stripParams) 
+Panel::Panel(unsigned pin, unsigned width, unsigned height, Style_enum style, IniSide_enum iniSide, unsigned matrixRotation, neoPixelType stripParams) 
 	:  _pin(pin), _numLeds(width*height), _width(width), _height(height), _layoutStyle(style), _iniSide(iniSide), 
-		_matrixRotation(matrixRotation), _stripParams(stripParams)
+		_stripParams(stripParams), _rotation(0), _x_ref(0), _y_ref(0)
 {
 
+    rotateMatrix(matrixRotation);
+    
     _autoBrightnessMin = 10;
     _autoBrightnessMax = 255;
     _autoBrightnessMode = false;
@@ -30,9 +23,50 @@ Panel::Panel(int pin, unsigned width, unsigned height, Style_enum style, IniSide
     _strip = new Adafruit_NeoPixel(_numLeds, _pin, _stripParams); 
 }
 
+
+Panel::Panel(unsigned pin, unsigned width, unsigned height, Style_enum style, IniSide_enum iniSide, unsigned matrixRotation){
+  Panel(pin, width, height, style, iniSide, matrixRotation, NEO_GRB + NEO_KHZ800);
+}
+
+Panel::Panel(unsigned width, unsigned height, Style_enum style, IniSide_enum iniSide, unsigned matrixRotation){
+  Panel(MAT_PIN, width, height, style, iniSide, matrixRotation);
+}
+
 Panel::~Panel(){
     free(_cData);
     delete _strip;  
+}
+
+void Panel::rebuild(unsigned pin, unsigned width, unsigned height, Style_enum style, IniSide_enum iniSide, int matrixRotation, neoPixelType stripParams){
+    //clear
+    free(_cData);
+    delete _strip; 
+
+    _width = width;
+    _height = height;
+    _numLeds = width*height;
+  
+    _iniSide = iniSide;
+    _layoutStyle = style;
+    _stripParams = stripParams;
+    rotateMatrix(matrixRotation);
+   
+    _cData = (uint32_t*)malloc(_numLeds*sizeof(uint32_t));
+    memset(_cData, _numLeds*sizeof(uint32_t), 0);
+    
+    _strip = new Adafruit_NeoPixel(_numLeds, _pin, _stripParams); 
+}
+
+void Panel::rebuild(unsigned pin, unsigned width, unsigned height, Style_enum style, IniSide_enum iniSide, int matrixRotation){
+    rebuild(pin, width, height, style, iniSide, matrixRotation, _stripParams);
+}
+
+void Panel::rebuild(unsigned width, unsigned height, Style_enum style, IniSide_enum iniSide, int matrixRotation){
+    rebuild(_pin, width, height, style, iniSide, matrixRotation, _stripParams);
+}
+
+void Panel::rebuild(unsigned width, unsigned height){
+    rebuild(_pin, width, height, _layoutStyle, _iniSide, _matrixRotation, _stripParams);
 }
 
 bool Panel::begin(){
@@ -100,6 +134,26 @@ void Panel::clear(){
     setPixel(_strip->Color(0, 0, 0));
 }
 
+void Panel::pushMatrix(){
+  popX = _x_ref;
+  popY = _y_ref;
+  popRot = _rotation; 
+  popMatrixRot = _matrixRotation;
+}
+
+void Panel::popMatrix(){
+  _x_ref = popX;
+  _y_ref = popY;
+  _rotation = popRot;
+  _matrixRotation = popMatrixRot;
+}
+
+
+void Panel::translate(int x, int y){
+  _x_ref = x;
+  _y_ref = y;
+}
+
 void Panel::rotate(int deg){
 	deg %= 360;
 
@@ -128,6 +182,40 @@ void Panel::drawImg(Img_t img, int posX, int posY){
     for(unsigned x=0; x<img.width; x++)
         for(unsigned y=0; y<img.height; y++)
             setPixel(posX+x, posY+y, *((img.mat + y*img.width) + x));
+}
+
+void Panel::line(int x0, int y0, int x1, int y1){
+    line(x0, y0, x1, y1, _fillColor);
+}
+
+void Panel::line(int x0, int y0, int x1, int y1, uint32_t color){
+
+
+    //make sure p1 is greater/equal than p0 -> (x1 >= x0 && y1 >= y0)  
+    if(x1 < x0 || y1 < y0){
+        int tx = x0, ty = y0;
+    
+        x0 = x1;
+        y0 = y1;
+    
+        x1 = tx;
+        y1 = ty;
+    }
+
+    // Draw
+    if(x0 == x1)
+        for (int y = y0; y <= y1; ++y)
+            setPixel(x0, y, color);   
+    else if(y0 == y1)
+        for (int x = x0; x <= x1; ++x)
+          setPixel(x, y0, color);
+    else {
+        int deltaX = abs(x1-x0), deltaY = (y1-y0); 
+  
+        if(deltaX == deltaY)
+          for (int i = 0; i < deltaY; ++i)
+            setPixel(x0+i, y0+i, color);
+    }
 }
 
 void Panel::rect(int x0, int y0, int x1, int y1){
@@ -177,8 +265,26 @@ unsigned Panel::XY(unsigned x, unsigned y) const{
 bool Panel::calcTrans(int &x, int &y) const{
     
     //calc translation <todo>
-    //calc dot rotation <todo>    
-
+    x += _x_ref;
+    y += _y_ref;
+    
+    //calc dot rotation  
+    if (_rotation == 90){
+    int tx = x;
+  
+      x = y;
+      y = -tx;
+    }
+    else if (_rotation == 180){
+      x = -x;
+      y = -y;
+    }
+    else if (_rotation == 270){
+      int tx = x;
+  
+      x = -y;
+      y = tx;
+    }  
 
     //ensure range
     if( x >= _width  || x < 0) return -1;
