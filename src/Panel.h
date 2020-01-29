@@ -76,6 +76,9 @@ class Panel{
       bool setPixel(int x, int y, uint32_t color);
       bool setPixel(int x, int y);
       void setPixel(uint32_t color);
+      void fill(uint32_t color){
+        _fillColor = color;
+      }
 
       uint32_t getPixel(int x, int y) const;
       void clear();
@@ -111,6 +114,3 @@ class Panel{
 };   
 
 #endif
-
-
-

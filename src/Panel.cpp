@@ -24,13 +24,11 @@ Panel::Panel(unsigned pin, unsigned width, unsigned height, Style_enum style, In
 }
 
 
-Panel::Panel(unsigned pin, unsigned width, unsigned height, Style_enum style, IniSide_enum iniSide, unsigned matrixRotation){
-  Panel(pin, width, height, style, iniSide, matrixRotation, NEO_GRB + NEO_KHZ800);
-}
+Panel::Panel(unsigned pin, unsigned width, unsigned height, Style_enum style, IniSide_enum iniSide, unsigned matrixRotation)
+  : Panel(pin, width, height, style, iniSide, matrixRotation, NEO_GRB + NEO_KHZ800) {}
 
-Panel::Panel(unsigned width, unsigned height, Style_enum style, IniSide_enum iniSide, unsigned matrixRotation){
-  Panel(MAT_PIN, width, height, style, iniSide, matrixRotation);
-}
+Panel::Panel(unsigned width, unsigned height, Style_enum style, IniSide_enum iniSide, unsigned matrixRotation)
+  : Panel(MAT_PIN, width, height, style, iniSide, matrixRotation){}
 
 Panel::~Panel(){
     free(_cData);
@@ -150,17 +148,17 @@ void Panel::popMatrix(){
 
 
 void Panel::translate(int x, int y){
-  _x_ref = x;
-  _y_ref = y;
+  _x_ref += x;
+  _y_ref += y;
 }
 
 void Panel::rotate(int deg){
 	deg %= 360;
 
-	if(deg < 0)
-		deg = 360 -deg;
+	_rotation += deg;
 
-	_rotation = deg;
+	if(_rotation < 0)
+		_rotation = 360 - _rotation;
 }
 
 void Panel::rotateMatrix(int deg){
@@ -173,14 +171,14 @@ void Panel::rotateMatrix(int deg){
 }
 
 void Panel::drawImg(uint32_t *img, unsigned width, unsigned height, int posX, int posY){
-    for(unsigned x=0; x<width; x++)
-        for(unsigned y=0; y<height; y++)
+    for(unsigned x=0; x<width; ++x)
+        for(unsigned y=0; y<height; ++y)
             setPixel(posX+x, posY+y, *((img + y*width) + x));
 }
 
 void Panel::drawImg(Img_t img, int posX, int posY){
-    for(unsigned x=0; x<img.width; x++)
-        for(unsigned y=0; y<img.height; y++)
+    for(unsigned x=0; x<img.width; ++x)
+        for(unsigned y=0; y<img.height; ++y)
             setPixel(posX+x, posY+y, *((img.mat + y*img.width) + x));
 }
 
@@ -223,13 +221,23 @@ void Panel::rect(int x0, int y0, int x1, int y1){
 }
 
 void Panel::rect(int x0, int y0, int x1, int y1, uint32_t color){
-    for(int y = y0; y<=y1; y++)
-        for(int x = x0; x<=x1; x++)
+    if(x1 < x0 || y1 < y0){
+        int tx = x0, ty = y0;
+    
+        x0 = x1;
+        y0 = y1;
+    
+        x1 = tx;
+        y1 = ty;
+    }
+
+    for(int y = y0; y<=y1; ++y)
+        for(int x = x0; x<=x1; ++x)
             setPixel(x, y, color);        
 }
 
 void Panel::testLayout(){
-  for(unsigned i=0; i<_numLeds; i++){
+  for(unsigned i=0; i<_numLeds; ++i){
     _strip->setPixelColor(i, _strip->Color(random(0, 255), random(0, 255), random(0, 255)));
     show();
     delay(100);
@@ -264,10 +272,6 @@ unsigned Panel::XY(unsigned x, unsigned y) const{
 
 bool Panel::calcTrans(int &x, int &y) const{
     
-    //calc translation <todo>
-    x += _x_ref;
-    y += _y_ref;
-    
     //calc dot rotation  
     if (_rotation == 90){
     int tx = x;
@@ -285,6 +289,10 @@ bool Panel::calcTrans(int &x, int &y) const{
       x = -y;
       y = tx;
     }  
+    
+    //calc translation
+    x += _x_ref;
+    y += _y_ref;
 
     //ensure range
     if( x >= _width  || x < 0) return -1;
