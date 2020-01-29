@@ -1,27 +1,42 @@
-#include <Panel.h>
+#include "Panel.h"
+
+#include <Arduino_APDS9960.h>
+
+#define MAT_PIN 6
 
 //// public ////
 
-Panel::Panel(uint8_t _ledPin, uint8_t _width, uint8_t _height, bool _style, bool _iniSide) : 
-    numLeds(_width*_height), width (_width), height(_height), layoutStyle(_style), iniSide(_iniSide), rotation(0)
-{ 
-    autoBrightnessMin = 10;
-    autoBrightnessMax = 255;
-    autoBrightnessMode = false;
 
-    cData = (uint32_t*)malloc(numLeds*sizeof(uint32_t));
-    memset(cData, numLeds*sizeof(uint32_t), 0);
+Panel::Panel(unsigned width, unsigned height, Style_enum style, IniSide_enum iniSide, unsigned matrixRotation){
+	Panel(MAT_PIN, width, height, style, iniSide, matrixRotation);
+}
+
+Panel::Panel(int pin, unsigned width, unsigned height, Style_enum style, IniSide_enum iniSide, unsigned matrixRotation){
+	Panel(pin, width, height, style, iniSide, matrixRotation, NEO_GRB + NEO_KHZ800);
+}
+
+Panel::Panel(int pin, unsigned width, unsigned height, Style_enum style, IniSide_enum iniSide, unsigned matrixRotation, neoPixelType stripParams) 
+	:  _pin(pin), _numLeds(width*height), _width(width), _height(height), _layoutStyle(style), _iniSide(iniSide), 
+		_matrixRotation(matrixRotation), _stripParams(stripParams)
+{
+
+    _autoBrightnessMin = 10;
+    _autoBrightnessMax = 255;
+    _autoBrightnessMode = false;
+
+    _cData = (uint32_t*)malloc(_numLeds*sizeof(uint32_t));
+    memset(_cData, _numLeds*sizeof(uint32_t), 0);
     
-    strip = new Adafruit_NeoPixel(numLeds, _ledPin, NEO_GRB + NEO_KHZ800); 
+    _strip = new Adafruit_NeoPixel(_numLeds, _pin, _stripParams); 
 }
 
 Panel::~Panel(){
-    free(cData);
-    delete strip;  
+    free(_cData);
+    delete _strip;  
 }
 
 bool Panel::begin(){
-    strip->begin();
+    _strip->begin();
     
     if (!APDS.begin())
       return false;  
@@ -30,118 +45,128 @@ bool Panel::begin(){
 }
 
 void Panel::setBrightness(int lvl){
-    strip->setBrightness(lvl);
+    _strip->setBrightness(lvl);
 }
 
-void Panel::setAutoBrightness(int min, int max, bool enable){
-    autoBrightnessMin = min;
-    autoBrightnessMax = max;
-    autoBrightnessMode = enable;
+void Panel::setAutoBrightness(int _min, int _max, bool enable){
+    _autoBrightnessMin = _min;
+    _autoBrightnessMax = _max;
+    _autoBrightnessMode = enable;
 }
 
 bool Panel::canShow(){
-    return strip->canShow();
+    return _strip->canShow();
 }
 
 void Panel::show(){
-    if(autoBrightnessMode)
+    if(_autoBrightnessMode)
           if(APDS.colorAvailable()){
                 int r, g, b;
                 APDS.readColor(r, g, b);  
-                setBrightness((r+g+b)/MAX_APDS_VAL*(autoBrightnessMax-autoBrightnessMin) + autoBrightnessMin);
+                setBrightness((r+g+b)/MAX_APDS_VAL*(_autoBrightnessMax-_autoBrightnessMin) + _autoBrightnessMin);
           }
   
-    strip->show();
+    _strip->show();
 }
 
-bool Panel::setPixel(uint8_t x, uint8_t y, uint32_t color){
-    if( x >= width  || x < 0) return false;
-    if( y >= height || y < 0) return false;
+bool Panel::setPixel(int x, int y, uint32_t color){
+    if(calcTrans(x, y))
+      return -1;
+    
+    unsigned pos = XY(x, y);
 
-    calcRotation(x, y);
-    uint8_t pos = XY(x, y);
-
-    cData[pos] = color;
-    strip->setPixelColor(pos, color);
+    _cData[pos] = color;
+    _strip->setPixelColor(pos, color);
     return true;
 }
-bool Panel::setPixel(uint8_t x, uint8_t y){
-    return setPixel(x, y, fillColor);
+bool Panel::setPixel(int x, int y){
+    return setPixel(x, y, _fillColor);
 }
 
 void Panel::setPixel(uint32_t color){
-    for(int i=0; i<numLeds; i++)
-        strip->setPixelColor(i, color);
+    for(int i=0; i<_numLeds; i++)
+        _strip->setPixelColor(i, color);
 }
 
-uint32_t Panel::getPixel(uint8_t x, uint8_t y) const{
-    if( x >= width  || x < 0) return -1;
-    if( y >= height || y < 0) return -1; 
+uint32_t Panel::getPixel(int x, int y) const{ 
 
-    calcRotation(x, y);
-    return cData[XY(x, y)];
+    if(calcTrans(x, y))
+      return -1;
+      
+    return _cData[XY(x, y)];
 }
 
 void Panel::clear(){
-    setPixel(strip->Color(0, 0, 0));
+    setPixel(_strip->Color(0, 0, 0));
 }
 
-void Panel::rotate(uint16_t deg){ //just 90, 180, 270 degrees 
-    rotation = deg;
+void Panel::rotate(int deg){
+	deg %= 360;
+
+	if(deg < 0)
+		deg = 360 -deg;
+
+	_rotation = deg;
 }
 
-void Panel::drawImg(uint32_t *img, uint8_t width, uint8_t height, uint8_t posX, uint8_t posY){
-    for(uint8_t x=0; x<width; x++)
-        for(uint8_t y=0; y<height; y++)
+void Panel::rotateMatrix(int deg){
+	deg %= 360;
+
+	if(deg < 0)
+  	deg = 360 -deg;
+
+	_matrixRotation = deg;
+}
+
+void Panel::drawImg(uint32_t *img, unsigned width, unsigned height, int posX, int posY){
+    for(unsigned x=0; x<width; x++)
+        for(unsigned y=0; y<height; y++)
             setPixel(posX+x, posY+y, *((img + y*width) + x));
 }
 
-void Panel::drawImg(Img_t img, uint8_t posX, uint8_t posY){
-    for(uint8_t x=0; x<img.width; x++)
-        for(uint8_t y=0; y<img.height; y++)
+void Panel::drawImg(Img_t img, int posX, int posY){
+    for(unsigned x=0; x<img.width; x++)
+        for(unsigned y=0; y<img.height; y++)
             setPixel(posX+x, posY+y, *((img.mat + y*img.width) + x));
 }
 
-void Panel::rect(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1){
-  rect(x0, y0, x1, y1, fillColor);
+void Panel::rect(int x0, int y0, int x1, int y1){
+  rect(x0, y0, x1, y1, _fillColor);
 }
 
-void Panel::rect(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1, uint32_t color){
-    for(uint8_t y = y0; y<=y1; y++)
-        for(uint8_t x = x0; x<=x1; x++){
-            setPixel(x, y, color);
-            delay(100);
-        }
-  
+void Panel::rect(int x0, int y0, int x1, int y1, uint32_t color){
+    for(int y = y0; y<=y1; y++)
+        for(int x = x0; x<=x1; x++)
+            setPixel(x, y, color);        
 }
 
 void Panel::testLayout(){
-  for(int i=0; i<numLeds; i++){
-    strip->setPixelColor(i, strip->Color(random(0, 255), random(0, 255), random(0, 255)));
+  for(unsigned i=0; i<_numLeds; i++){
+    _strip->setPixelColor(i, _strip->Color(random(0, 255), random(0, 255), random(0, 255)));
     show();
     delay(100);
   }//*/
 }
 
 /// private /////
-uint16_t Panel::XY( uint8_t x, uint8_t y) const{
-    uint16_t i;
+unsigned Panel::XY(unsigned x, unsigned y) const{
+    unsigned i;
 
-    if(iniSide == RIGHT)
-        x = width-1 - x;
+    if(_iniSide == RIGHT)
+        x = _width-1 - x;
             
-    switch(layoutStyle){
+    switch(_layoutStyle){
         case LINE:
-            i = (y * width) + x;
+            i = (y * _width) + x;
             break;
         case SERPENTINE:
             if( y & 0x01) {
               // Odd rows run backwards
-              uint8_t reverseX = (width - 1) - x;
-              i = (y * width) + reverseX;
+              unsigned revX = (_width - 1) - x;
+              i = (y * _width) + revX;
             } else {
               // Even rows run forwards
-              i = (y * width) + x;
+              i = (y * _width) + x;
             }
             break;
     }
@@ -149,19 +174,32 @@ uint16_t Panel::XY( uint8_t x, uint8_t y) const{
   return i;
 }
 
-void Panel::calcRotation(uint8_t &x, uint8_t &y) const{
-    if(rotation == 90){
-        uint8_t tx = x;
-        x = width-1-y;
+bool Panel::calcTrans(int &x, int &y) const{
+    
+    //calc translation <todo>
+    //calc dot rotation <todo>    
+
+
+    //ensure range
+    if( x >= _width  || x < 0) return -1;
+    if( y >= _height || y < 0) return -1;
+  
+
+    //calc matrix rotation
+    if(_matrixRotation == 90){
+        unsigned tx = x;
+        x = _width-1-y;
         y = tx;
     }
-    else if(rotation == 180){
-        x = width-1-x;
-        y = height-1-y;
+    else if(_matrixRotation == 180){
+        x = _width-1-x;
+        y = _height-1-y;
     }
-    else if(rotation == 270){
-        uint8_t tx = x;
+    else if(_matrixRotation == 270){
+        unsigned tx = x;
         x = y;
-        y = height-1-tx;
+        y = _height-1-tx;
     }
+
+    return 0;
 }
