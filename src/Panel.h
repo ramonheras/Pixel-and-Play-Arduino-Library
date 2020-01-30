@@ -96,7 +96,8 @@ class Panel{
       	unsigned getWidth(){ return _width; }
       	unsigned getHeight(){ return _height; }
       	unsigned getRotation(){ return _rotation; }
-      	uint32_t getFillColor(){ return _matrixRotation; }
+      	unsigned getMatrixRotation(){ return _matrixRotation; }
+      	uint32_t getFillColor(){ return _fillColor; }
       	int getXTranslation(){ return _x_ref; }
       	int getYTranslation(){ return _y_ref; }
       	Style_enum getLayoutStyle(){ return _layoutStyle; }
