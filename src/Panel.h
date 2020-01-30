@@ -2,8 +2,6 @@
 #define PANEL_H
 
 #include <Adafruit_NeoPixel.h>
-//#include <Arduino_LSM9DS1.h>
-//#include <Arduino_APDS9960.h>
 
 #define BRIGHTNESS 30
 #define DEFAULT_BRIGHTNESS 10
@@ -52,63 +50,69 @@ class Panel{
       
       unsigned XY( unsigned x, unsigned y) const;
       bool calcTrans(int &x, int &y) const;
+      void orderPoints(int &x0, int &y0, int &x1, int &y1) const;
 
       
     public:
-    
-      Panel(unsigned pin, unsigned width, unsigned height, Style_enum style, IniSide_enum iniSide, unsigned matrixRotation, neoPixelType stripParams);   
-      Panel(unsigned pin, unsigned width, unsigned height, Style_enum style, IniSide_enum iniSide, unsigned matrixRotation); 
-      Panel(unsigned width, unsigned height, Style_enum style, IniSide_enum iniSide, unsigned matrixRotation);     
-      
-      ~Panel();
 
-      void rebuild(unsigned pin, unsigned width, unsigned height, Style_enum style, IniSide_enum iniSide, int matrixRotation, neoPixelType stripParams);
-      void rebuild(unsigned pin, unsigned width, unsigned height, Style_enum style, IniSide_enum iniSide, int matrixRotation);
-      void rebuild(unsigned width, unsigned height, Style_enum style, IniSide_enum iniSide, int matrixRotation);
-      void rebuild(unsigned width, unsigned height);
+		Panel(unsigned pin, unsigned width, unsigned height, Style_enum style, IniSide_enum iniSide, unsigned matrixRotation, neoPixelType stripParams);   
+		Panel(unsigned pin, unsigned width, unsigned height, Style_enum style, IniSide_enum iniSide, unsigned matrixRotation); 
+		Panel(unsigned width, unsigned height, Style_enum style, IniSide_enum iniSide, unsigned matrixRotation);     
 
-      bool begin();
-      void setBrightness(int lvl);
-      void setAutoBrightness(int _min, int _max, bool enable);
-      bool canShow();
-      void show();
+		~Panel();
 
-      bool setPixel(int x, int y, uint32_t color);
-      bool setPixel(int x, int y);
-      void setPixel(uint32_t color);
-      void fill(uint32_t color){
-        _fillColor = color;
-      }
+		void rebuild(unsigned pin, unsigned width, unsigned height, Style_enum style, IniSide_enum iniSide, int matrixRotation, neoPixelType stripParams);
+		void rebuild(unsigned pin, unsigned width, unsigned height, Style_enum style, IniSide_enum iniSide, int matrixRotation);
+		void rebuild(unsigned width, unsigned height, Style_enum style, IniSide_enum iniSide, int matrixRotation);
+		void rebuild(unsigned width, unsigned height);
 
-      uint32_t getPixel(int x, int y) const;
-      void clear();
-      
-      void pushMatrix();
-      void popMatrix();
-      void translate(int x, int y);
-      void rotate(int deg);
-      void rotateMatrix(int deg);
+		void rotateMatrix(int deg);
+		void testLayout();
+		
+		bool begin();
+		void setBrightness(int lvl);
+		void setAutoBrightness(int _min, int _max, bool enable);
+		bool canShow();
+		void show();
 
-      void testLayout();
-      
-      void drawImg(Img_t img, int posX, int posY);
-      void drawImg(uint32_t *img, unsigned width, unsigned height, int posX, int posY);
-      void line(int x0, int y0, int x1, int y1);
-      void line(int x0, int y0, int x1, int y1, uint32_t color);
-      void rect(int x0, int y0, int x1, int y1);
-      void rect(int x0, int y0, int x1, int y1, uint32_t color);
+		bool setPixel(int x, int y, uint32_t color);
+		bool setPixel(int x, int y);
+		void setPixel(uint32_t color);
+		uint32_t getPixel(int x, int y) const;
+		void fill(uint32_t color);
+		void clear();
+		void line(int x0, int y0, int x1, int y1);
+		void line(int x0, int y0, int x1, int y1, uint32_t color);
+		void rect(int x0, int y0, int x1, int y1);
+		void rect(int x0, int y0, int x1, int y1, uint32_t color);
+		void drawImg(Img_t img, int posX, int posY);
+		void drawImg(uint32_t *img, unsigned width, unsigned height, int posX, int posY);
 
-      static uint32_t color(uint8_t r, uint8_t g, uint8_t b){
-          return Adafruit_NeoPixel::gamma32(Adafruit_NeoPixel::Color(r, g, b));
-      }
-      static uint32_t colorHSV(uint16_t hue, uint8_t sat, uint8_t val){
-          return Adafruit_NeoPixel::ColorHSV(hue, sat, val);
-      }
-      static uint32_t colorUncorrected(uint8_t r, uint8_t g, uint8_t b){
-          return Adafruit_NeoPixel::Color(r, g, b);
-      }
+		void pushMatrix();
+		void popMatrix();
+		void translate(int x, int y);
+		void rotate(int deg);
 
-      //getters <todo>
+      	unsigned getWidth(){ return _width; }
+      	unsigned getHeight(){ return _height; }
+      	unsigned getRotation(){ return _rotation; }
+      	uint32_t getFillColor(){ return _matrixRotation; }
+      	int getXTranslation(){ return _x_ref; }
+      	int getYTranslation(){ return _y_ref; }
+      	Style_enum getLayoutStyle(){ return _layoutStyle; }
+      	IniSide_enum getIniSide(){ return _iniSide; }
+
+
+		static uint32_t color(uint8_t r, uint8_t g, uint8_t b){
+		    return Adafruit_NeoPixel::gamma32(Adafruit_NeoPixel::Color(r, g, b));
+		}
+		static uint32_t colorHSV(uint16_t hue, uint8_t sat, uint8_t val){
+		    return Adafruit_NeoPixel::ColorHSV(hue, sat, val);
+		}
+		static uint32_t colorUncorrected(uint8_t r, uint8_t g, uint8_t b){
+		    return Adafruit_NeoPixel::Color(r, g, b);
+		}
+
 
       
 };   

@@ -1,10 +1,13 @@
 #include "Panel.h"
 
 #include <Arduino_APDS9960.h>
+#include <Adafruit_NeoPixel.h>
 
 #define MAT_PIN 6
 
-//// public ////
+//////////////--------------------------------------------------------------------|
+/// PUBLIC ///                                                                    |
+//////////////--------------------------------------------------------------------|
 
 Panel::Panel(unsigned pin, unsigned width, unsigned height, Style_enum style, IniSide_enum iniSide, unsigned matrixRotation, neoPixelType stripParams) 
 	:  _pin(pin), _numLeds(width*height), _width(width), _height(height), _layoutStyle(style), _iniSide(iniSide), 
@@ -65,6 +68,23 @@ void Panel::rebuild(unsigned width, unsigned height, Style_enum style, IniSide_e
 
 void Panel::rebuild(unsigned width, unsigned height){
     rebuild(_pin, width, height, _layoutStyle, _iniSide, _matrixRotation, _stripParams);
+}
+
+void Panel::testLayout(){
+  for(unsigned i=0; i<_numLeds; ++i){
+    _strip->setPixelColor(i, _strip->Color(random(0, 255), random(0, 255), random(0, 255)));
+    show();
+    delay(100);
+  }
+}
+
+void Panel::rotateMatrix(int deg){
+	deg %= 360;
+
+	if(deg < 0)
+  	deg = 360 -deg;
+
+	_matrixRotation = deg;
 }
 
 bool Panel::begin(){
@@ -128,8 +148,59 @@ uint32_t Panel::getPixel(int x, int y) const{
     return _cData[XY(x, y)];
 }
 
+void Panel::fill(uint32_t color){
+    _fillColor = color;
+}
+
 void Panel::clear(){
     setPixel(_strip->Color(0, 0, 0));
+}
+
+void Panel::line(int x0, int y0, int x1, int y1){
+    line(x0, y0, x1, y1, _fillColor);
+}
+
+void Panel::line(int x0, int y0, int x1, int y1, uint32_t color){ 
+    orderPoints(x0, y0, x1, y1);
+
+    // Draw
+    if(x0 == x1)
+        for (int y = y0; y <= y1; ++y)
+            setPixel(x0, y, color);   
+    else if(y0 == y1)
+        for (int x = x0; x <= x1; ++x)
+          setPixel(x, y0, color);
+    else {
+        int deltaX = abs(x1-x0), deltaY = (y1-y0); 
+  
+        if(deltaX == deltaY)
+          for (int i = 0; i < deltaY; ++i)
+            setPixel(x0+i, y0+i, color);
+    }
+}
+
+void Panel::rect(int x0, int y0, int x1, int y1){
+  rect(x0, y0, x1, y1, _fillColor);
+}
+
+void Panel::rect(int x0, int y0, int x1, int y1, uint32_t color){
+    orderPoints(x0, y0, x1, y1);
+
+    for(int y = y0; y<=y1; ++y)
+        for(int x = x0; x<=x1; ++x)
+            setPixel(x, y, color);        
+}
+
+void Panel::drawImg(uint32_t *img, unsigned width, unsigned height, int posX, int posY){
+    for(unsigned x=0; x<width; ++x)
+        for(unsigned y=0; y<height; ++y)
+            setPixel(posX+x, posY+y, *((img + y*width) + x));
+}
+
+void Panel::drawImg(Img_t img, int posX, int posY){
+    for(unsigned x=0; x<img.width; ++x)
+        for(unsigned y=0; y<img.height; ++y)
+            setPixel(posX+x, posY+y, *((img.mat + y*img.width) + x));
 }
 
 void Panel::pushMatrix(){
@@ -161,92 +232,33 @@ void Panel::rotate(int deg){
 		_rotation = 360 - _rotation;
 }
 
-void Panel::rotateMatrix(int deg){
-	deg %= 360;
-
-	if(deg < 0)
-  	deg = 360 -deg;
-
-	_matrixRotation = deg;
-}
-
-void Panel::drawImg(uint32_t *img, unsigned width, unsigned height, int posX, int posY){
-    for(unsigned x=0; x<width; ++x)
-        for(unsigned y=0; y<height; ++y)
-            setPixel(posX+x, posY+y, *((img + y*width) + x));
-}
-
-void Panel::drawImg(Img_t img, int posX, int posY){
-    for(unsigned x=0; x<img.width; ++x)
-        for(unsigned y=0; y<img.height; ++y)
-            setPixel(posX+x, posY+y, *((img.mat + y*img.width) + x));
-}
-
-void Panel::line(int x0, int y0, int x1, int y1){
-    line(x0, y0, x1, y1, _fillColor);
-}
-
-void Panel::line(int x0, int y0, int x1, int y1, uint32_t color){
 
 
-    //make sure p1 is greater/equal than p0 -> (x1 >= x0 && y1 >= y0)  
-    if(x1 < x0 || y1 < y0){
-        int tx = x0, ty = y0;
-    
-        x0 = x1;
-        y0 = y1;
-    
-        x1 = tx;
-        y1 = ty;
-    }
 
-    // Draw
-    if(x0 == x1)
-        for (int y = y0; y <= y1; ++y)
-            setPixel(x0, y, color);   
-    else if(y0 == y1)
-        for (int x = x0; x <= x1; ++x)
-          setPixel(x, y0, color);
-    else {
-        int deltaX = abs(x1-x0), deltaY = (y1-y0); 
-  
-        if(deltaX == deltaY)
-          for (int i = 0; i < deltaY; ++i)
-            setPixel(x0+i, y0+i, color);
-    }
-}
 
-void Panel::rect(int x0, int y0, int x1, int y1){
-  rect(x0, y0, x1, y1, _fillColor);
-}
+///////////////-------------------------------------------------------------------|
+/// PRIVATE ///                                                                   |
+///////////////-------------------------------------------------------------------|
 
-void Panel::rect(int x0, int y0, int x1, int y1, uint32_t color){
-    if(x1 < x0 || y1 < y0){
-        int tx = x0, ty = y0;
-    
-        x0 = x1;
-        y0 = y1;
-    
-        x1 = tx;
-        y1 = ty;
-    }
 
-    for(int y = y0; y<=y1; ++y)
-        for(int x = x0; x<=x1; ++x)
-            setPixel(x, y, color);        
-}
-
-void Panel::testLayout(){
-  for(unsigned i=0; i<_numLeds; ++i){
-    _strip->setPixelColor(i, _strip->Color(random(0, 255), random(0, 255), random(0, 255)));
-    show();
-    delay(100);
-  }//*/
-}
-
-/// private /////
-unsigned Panel::XY(unsigned x, unsigned y) const{
+inline unsigned Panel::XY(unsigned x, unsigned y) const{
     unsigned i;
+
+    //calc matrix rotation
+    if(_matrixRotation == 90){
+        unsigned tx = x;
+        x = _width-1-y;
+        y = tx;
+    }
+    else if(_matrixRotation == 180){
+        x = _width-1-x;
+        y = _height-1-y;
+    }
+    else if(_matrixRotation == 270){
+        unsigned tx = x;
+        x = y;
+        y = _height-1-tx;
+    }
 
     if(_iniSide == RIGHT)
         x = _width-1 - x;
@@ -270,18 +282,18 @@ unsigned Panel::XY(unsigned x, unsigned y) const{
   return i;
 }
 
-bool Panel::calcTrans(int &x, int &y) const{
+inline bool Panel::calcTrans(int &x, int &y) const{
     
     //calc dot rotation  
     if (_rotation == 90){
-    int tx = x;
-  
-      x = y;
-      y = -tx;
+        int tx = x;
+    
+        x = y;
+        y = -tx;
     }
     else if (_rotation == 180){
-      x = -x;
-      y = -y;
+        x = -x;
+        y = -y;
     }
     else if (_rotation == 270){
       int tx = x;
@@ -297,23 +309,19 @@ bool Panel::calcTrans(int &x, int &y) const{
     //ensure range
     if( x >= _width  || x < 0) return -1;
     if( y >= _height || y < 0) return -1;
-  
-
-    //calc matrix rotation
-    if(_matrixRotation == 90){
-        unsigned tx = x;
-        x = _width-1-y;
-        y = tx;
-    }
-    else if(_matrixRotation == 180){
-        x = _width-1-x;
-        y = _height-1-y;
-    }
-    else if(_matrixRotation == 270){
-        unsigned tx = x;
-        x = y;
-        y = _height-1-tx;
-    }
 
     return 0;
+}
+
+inline void Panel::orderPoints(int &x0, int &y0, int &x1, int &y1) const{
+    //make sure p1 is greater/equal than p0 -> (x1 >= x0 && y1 >= y0) 
+    if(x1 < x0 || y1 < y0){
+        int tx = x0, ty = y0;
+    
+        x0 = x1;
+        y0 = y1;
+    
+        x1 = tx;
+        y1 = ty;
+    }
 }
