@@ -83,10 +83,10 @@ class Panel{
 		void clear();
 		void line(int x0, int y0, int x1, int y1);
 		void line(int x0, int y0, int x1, int y1, uint32_t color);
-		void rect(int x0, int y0, int x1, int y1);
-		void rect(int x0, int y0, int x1, int y1, uint32_t color);
-		void drawImg(Img_t img, int posX, int posY);
-		void drawImg(uint32_t *img, unsigned width, unsigned height, int posX, int posY);
+		void rect(int x0, int y0, unsigned width, unsigned height);
+		void rect(int x0, int y0, unsigned width, unsigned height, uint32_t color);
+		void image(Img_t img, int posX, int posY);
+		void image(uint32_t *img, unsigned width, unsigned height, int posX, int posY);
 
 		void pushMatrix();
 		void popMatrix();

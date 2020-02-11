@@ -179,25 +179,23 @@ void Panel::line(int x0, int y0, int x1, int y1, uint32_t color){
     }
 }
 
-void Panel::rect(int x0, int y0, int x1, int y1){
-  rect(x0, y0, x1, y1, _fillColor);
+void Panel::rect(int x0, int y0, unsigned width, unsigned height){
+  rect(x0, y0, width, height, _fillColor);
 }
 
-void Panel::rect(int x0, int y0, int x1, int y1, uint32_t color){
-    orderPoints(x0, y0, x1, y1);
-
-    for(int y = y0; y<=y1; ++y)
-        for(int x = x0; x<=x1; ++x)
+void Panel::rect(int x0, int y0, unsigned width, unsigned height, uint32_t color){
+    for(int y = y0; y<(y0+height); ++y)
+        for(int x = x0; x<(x0+width); ++x)
             setPixel(x, y, color);        
 }
 
-void Panel::drawImg(uint32_t *img, unsigned width, unsigned height, int posX, int posY){
+void Panel::image(uint32_t *img, unsigned width, unsigned height, int posX, int posY){
     for(unsigned x=0; x<width; ++x)
         for(unsigned y=0; y<height; ++y)
             setPixel(posX+x, posY+y, *((img + y*width) + x));
 }
 
-void Panel::drawImg(Img_t img, int posX, int posY){
+void Panel::image(Img_t img, int posX, int posY){
     for(unsigned x=0; x<img.width; ++x)
         for(unsigned y=0; y<img.height; ++y)
             setPixel(posX+x, posY+y, *((img.mat + y*img.width) + x));
