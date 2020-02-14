@@ -1,2 +1,20 @@
-# Pixel-and-Play-Arduino-Library
-* Arduino Library for Pixel and Play.
+## Pixel-and-Play-Arduino-Library
+
+Control any neopixel matrix. This library comes with more than 40 processing like functions.
+</br>
+<ul>
+<li>Cool game <b>examples</b> and demos: minesRuner-Accel, minesRunner-gest, demos, testLayout, etc</li>
+<li>Supports <b>all</b> possible led layouts.</li>
+<li><b>Hot-swap</b> the neopixel matrix by using <i>rebuild()</i> </li>
+<li>Transformations such as <i>rotate(), translate(), rotateMatrix()</i>; Alongside with <i>popMatrix()</i> and <i>pushMatrix()</i>. </li>
+<li>Draw methods : <i>setPixel(), line(), rect()</i> </li>
+<li>Display <b>images</b> using <i>image()</i></li>
+<li><b>Debbug</b> and <b>remote</b> control methods: <i>remoteMode()</i></li>
+</ul>
+And a lot more...
+</br>
+This library is part of the neopixel project an open hardware/software project to make easy create interactive games.
+</br>
+Find all .stl (3d) and gerber (PCB) files to build your own Pixel and Play console at <a href="https://github.com/ramonheras/Pixel-and-Play-Open-Hardware">Github Pixel and play Open Hardware.</a> 
+</br>
+This project was born in 'Creative Electronics', a BEng Electronics Engineering 4th year module at the University of Málaga,<a href="https://www.uma.es/etsi-de-telecomunicacion/"> School of Telecommunications.</a>
