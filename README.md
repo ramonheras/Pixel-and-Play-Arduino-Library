@@ -17,4 +17,5 @@ This library is part of the neopixel project an open hardware/software project t
 </br>
 Find all .stl (3d) and gerber (PCB) files to build your own Pixel and Play console at <a href="https://github.com/ramonheras/Pixel-and-Play-Open-Hardware">Github Pixel and play Open Hardware.</a> 
 </br>
+</br>
 This project was born in 'Creative Electronics', a BEng Electronics Engineering 4th year module at the University of Málaga,<a href="https://www.uma.es/etsi-de-telecomunicacion/"> School of Telecommunications.</a>
