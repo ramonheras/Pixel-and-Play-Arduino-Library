@@ -1,5 +1,7 @@
 ## Pixel-and-Play-Arduino-Library
 
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0) [![GitHub version](https://badge.fury.io/gh/Naereen%2FStrapDown.js.svg)](https://github.com/Naereen/StrapDown.js)
+
 Control any neopixel matrix. This library comes with more than 40 processing like functions.
 </br>
 <ul>
@@ -9,7 +11,6 @@ Control any neopixel matrix. This library comes with more than 40 processing lik
 <li>Transformations such as <i>rotate(), translate(), rotateMatrix()</i>; Alongside with <i>popMatrix()</i> and <i>pushMatrix()</i>. </li>
 <li>Draw methods : <i>setPixel(), line(), rect()</i> </li>
 <li>Display <b>images</b> using <i>image()</i></li>
-<li><b>Debbug</b> and <b>remote</b> control methods: <i>remoteMode()</i></li>
 </ul>
 And a lot more...
 </br>
