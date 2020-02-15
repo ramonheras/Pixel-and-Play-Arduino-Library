@@ -6,7 +6,6 @@
 
 //// public ////
 
-// Constructor
 Map::Map(Panel *_panel, Ball *_ball){
 
     panel = _panel;
@@ -16,7 +15,7 @@ Map::Map(Panel *_panel, Ball *_ball){
 
 void Map::loadMap(Img_t field){
 
-    panel->drawImg(field, 0, 0);
+    panel->image(field, 0, 0);
 }
 
 bool Map::gameOver(){
@@ -43,11 +42,11 @@ bool Map::gameWon(){
 
 bool Map::isOut(){
 
-    if ((ball->x >= panel->width) || (ball->x < 0)){
+    if ((ball->x >= panel->getWidth()) || (ball->x < 0)){
 
       return true;
       
-    } else if ((ball->y >= panel->height) || (ball->y < 1)){
+    } else if ((ball->y >= panel->getHeight()) || (ball->y < 1)){
 
       return true;
     }

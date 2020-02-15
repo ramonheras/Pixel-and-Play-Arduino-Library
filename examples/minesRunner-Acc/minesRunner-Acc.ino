@@ -87,7 +87,8 @@ void setup() {
 
   Serial.begin(9600);
   state = 0;
-  panel = new Panel(LED_PIN, 16, 16, SERPENTINE, RIGHT);
+  panel = new Panel(LED_PIN, 16, 16, SERPENTINE, RIGHT, 0);
+  panel->begin();
   panel->setBrightness(BRIGHTNESS);
 
 }
@@ -110,7 +111,7 @@ void loop() {
       state = 0;
       break;
     case 5: // GAME WON
-      panel->drawImg(win, 0, 0);
+      panel->image(win, 0, 0);
       panel->show();
       delay(2000);
       state = 0;

@@ -1,15 +1,14 @@
 #include "ball.hpp"
 #include <Arduino_LSM9DS1.h>
+#include <Arduino_APDS9960.h>
 #include <Panel.h>
 
 
-// OJO! : los define cambian con getPixel y esta funcion con el brillo de la pantalla
 #define BALL_COLOR panel->color(0, 0, 255)
 
 
 //// public ////
 
-// Constructor
 Ball::Ball(Panel *_panel, int x, int y){
 
   panel = _panel;
@@ -18,7 +17,6 @@ Ball::Ball(Panel *_panel, int x, int y){
 }
 
 
-// Procedimiento que muestra la pelota por pantalla
 void Ball::mostrar(){
 
     panel->setPixel(x, y, BALL_COLOR);

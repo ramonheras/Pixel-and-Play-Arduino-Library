@@ -4,7 +4,7 @@
 #define H 16
 #define LED_PIN 6
 
-Panel panel(LED_PIN, W, H, SERPENTINE, RIGHT);
+Panel panel(LED_PIN, W, H, SERPENTINE, RIGHT, 0);
 
 #define rgb(R,G,B) panel.color(R,G,B)
 #define G rgb(255, 0, 0)
@@ -325,7 +325,7 @@ void setup() {
 
 void loop() {
 
-  panel.drawImg(house, 0, 0);
+  panel.image(house, 0, 0);
   panel.show();
 }
 
