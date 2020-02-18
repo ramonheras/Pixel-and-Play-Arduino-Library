@@ -23,7 +23,9 @@ This project was born in 'Creative Electronics', a BEng Electronics Engineering 
 </br>
 </br>
 </br>
-[![Generic badge](https://img.shields.io/badge/YouTube-video 1-red.svg)](https://www.youtube.com/embed/-6H6jsCX4b4)
 
+[![Generic badge](https://img.shields.io/badge/YouTube-video-red.svg)](https://www.youtube.com/embed/-6H6jsCX4b4)
+
+[![Generic badge](https://img.shields.io/badge/YouTube-video_1-red.svg)](https://www.youtube.com/embed/-6H6jsCX4b4)
 
 [![IMAGE ALT TEXT HERE](https://img.youtube.com/vi/-6H6jsCX4b4/0.jpg)](https://www.youtube.com/watch?v=-6H6jsCX4b4)
