@@ -22,7 +22,9 @@ Find all .stl (3d) and gerber (PCB) files to build your own Pixel and Play conso
 This project was born in 'Creative Electronics', a BEng Electronics Engineering 4th year module at the University of Málaga,<a href="https://www.uma.es/etsi-de-telecomunicacion/"> School of Telecommunications.</a>
 </br>
 </br>
+
 ## Reference 
+
 </br>
 [![Generic badge](https://img.shields.io/badge/YouTube-video_1-red.svg)](https://www.youtube.com/embed/-6H6jsCX4b4)
 </br>
